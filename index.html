@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radar Visualization</title>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100%;
+    }
+    canvas {
+        background-color: black;
+        display: block;
+        margin: auto;
+    }
+</style>
+</head>
+<body>
+<canvas id="radarCanvas"></canvas>
+<script>
+    const canvas = document.getElementById("radarCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Function to set canvas size to full screen
+    function setCanvasSize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    // Call setCanvasSize initially and whenever the window is resized
+    setCanvasSize();
+    window.addEventListener('resize', setCanvasSize);
+
+    ctx.font = "20px Arial";
+    ctx.fillStyle = "white";
+    ctx.fillText("Ultrasonic Radar with Arduino + Python", 10, 30);
+    ctx.font = "15px Arial";
+    ctx.fillStyle = "gray";
+    ctx.fillText("By Prasanth", 10, 50);
+
+    // Draw gray circle in the middle
+    ctx.beginPath();
+    ctx.arc(canvas.width / 2, canvas.height / 2, 5, 0, Math.PI * 2);
+    ctx.fillStyle = "gray";
+    ctx.fill();
+
+    // Draw gray lines for every 30 degrees starting from the center
+    ctx.strokeStyle = "gray";
+    ctx.lineWidth = 2;
+    for (let angle = 0; angle < 360; angle += 30) {
+        let radians = angle * Math.PI / 180;
+        let startX = canvas.width / 2;
+        let startY = canvas.height / 2;
+        let endX = canvas.width / 2 + Math.cos(radians) * canvas.height / 2.1;
+        let endY = canvas.height / 2 + Math.sin(radians) * canvas.height/ 2.1;
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+        
+        ctx.font = "12px Arial";
+        ctx.fillStyle = "white";
+        ctx.fillText(`${angle}°`, endX, endY);
+    }
+
+    // Draw gray circles without filling for every 20px radius
+    ctx.strokeStyle = "gray";
+    for (let radius = 50; radius <= 250; radius += 50) {
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.font = "10px Arial";
+        ctx.fillStyle = "white";
+        distance = `${radius}cm`
+        ctx.fillText(distance, canvas.width / 2+radius+2, canvas.height / 2+10);
+        ctx.fillText(distance, canvas.width / 2-radius+2, canvas.height / 2+10);
+    }
+
+    function green_line(angle){
+        detectionFactor = 4
+        ctx.strokeStyle = "green";
+        ctx.lineWidth = 2;
+        let radians = angle * Math.PI / 180;
+        let previousRadians = (angle-1) * Math.PI / 180;
+        let startX = canvas.width / 2;
+        let startY = canvas.height / 2;
+        let endX = canvas.width / 2 + Math.cos(radians) * canvas.height / 2.1;
+        let endY = canvas.height / 2 + Math.sin(radians) * canvas.height/ 2.1;
+        let intermediateX = canvas.width / 2 + Math.cos(radians) * canvas.height / detectionFactor;
+        let intermediateY = canvas.height / 2 + Math.sin(radians) * canvas.height/ detectionFactor;
+        let intermediatePreviousEndX = canvas.width / 2 + Math.cos(previousRadians) * canvas.height / detectionFactor;
+        let intermediatePreviousEndY = canvas.height / 2 + Math.sin(previousRadians) * canvas.height/ detectionFactor;
+        let previousEndX = canvas.width / 2 + Math.cos(previousRadians) * canvas.height / 2.1;
+        let previousEndY = canvas.height / 2 + Math.sin(previousRadians) * canvas.height/ 2.1;
+        if (true){
+            // Draw triangle
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(intermediateX, intermediateY);
+            ctx.lineTo(intermediatePreviousEndX, intermediatePreviousEndY);
+            ctx.closePath();
+
+            // Fill triangle with green color
+            ctx.fillStyle = "green";
+            ctx.fill();
+
+            // Draw triangle
+            ctx.beginPath();
+            ctx.moveTo(intermediateX, intermediateY);
+            ctx.lineTo(intermediatePreviousEndX, intermediatePreviousEndY);
+            ctx.lineTo(previousEndX, previousEndY);
+            ctx.lineTo(endX, endY);
+            ctx.closePath();
+
+            // Fill triangle with green color
+            ctx.fillStyle = "red";
+            ctx.fill();
+
+        }else{
+            // Draw triangle
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.lineTo(previousEndX, previousEndY);
+            ctx.closePath();
+
+            // Fill triangle with green color
+            ctx.fillStyle = "green";
+            ctx.fill();
+        }
+    }
+    for (let angle = 0; angle < 30; angle += 1) 
+    green_line(angle)
+
+
+</script>
+</body>
+</html>

@@ -12,7 +12,8 @@ void setup() {
   pinMode(trig, OUTPUT); 
   digitalWrite(trig, LOW); 
   pinMode(echo, INPUT); 
-  Serial.begin(9600);
+  Serial.begin(115200);
+  Serial.setTimeout(1);
   delay(3000); 
 
 }
@@ -23,25 +24,28 @@ int get_distance(){
   digitalWrite(trig, LOW); 
   lecture_echo = pulseIn(echo, HIGH); 
   cm = lecture_echo / 58; 
-  Serial.print("Distance : "); 
-  Serial.println(cm); 
+  return cm;
 }
 
 void loop() {
   // tour de 0 à 180º
   for (int i = 1; i <= 180; i++){
     servoMoteur.write(i);
-    Serial.print("Angle:  ");
-    Serial.println(i);
+    int distance = get_distance();
+    Serial.print(i);
+    Serial.print(", ");
+    Serial.print(distance);
+    Serial.println("");
     delay(30);
-    get_distance();
   }
  // tour de 180 a 0º
   for (int i = 179; i >= 0; i--){
     servoMoteur.write(i);
-    Serial.print("Angle:  ");
-    Serial.println(i);
+    int distance = get_distance();
+    Serial.print(i);
+    Serial.print(", ");
+    Serial.print(distance);
+    Serial.println("");
     delay(30);
-    get_distance();
   }
 }

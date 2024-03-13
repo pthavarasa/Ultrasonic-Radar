@@ -20,7 +20,26 @@
 </head>
 <body>
 <canvas id="radarCanvas"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
 <script>
+    function FixedSizeArray(maxSize) {
+    this.array = [];
+    this.maxSize = maxSize;
+}
+
+FixedSizeArray.prototype.append = function(element) {
+    // Add the element to the end of the array
+    this.array.push(element);
+    
+    // If the array size exceeds the maximum size, remove the first element
+    if (this.array.length > this.maxSize) {
+        this.array.shift(); // Removes the first element
+    }
+}
+
+// Example usage:
+const fixedArray = new FixedSizeArray(30); // Creating a fixed-size array with a maximum size of 5
+
     const canvas = document.getElementById("radarCanvas");
     const ctx = canvas.getContext("2d");
 
@@ -33,7 +52,8 @@
     // Call setCanvasSize initially and whenever the window is resized
     setCanvasSize();
     window.addEventListener('resize', setCanvasSize);
-
+    function draw_init(){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.font = "20px Arial";
     ctx.fillStyle = "white";
     ctx.fillText("Ultrasonic Radar with Arduino + Python", 10, 30);
@@ -68,20 +88,22 @@
 
     // Draw gray circles without filling for every 20px radius
     ctx.strokeStyle = "gray";
-    for (let radius = 50; radius <= 250; radius += 50) {
+    for (let radius = 50; radius <= 400; radius += 50) {
         ctx.beginPath();
         ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
         ctx.stroke();
 
         ctx.font = "10px Arial";
         ctx.fillStyle = "white";
-        distance = `${radius}cm`
+        distance = `${radius*0.3}cm`
         ctx.fillText(distance, canvas.width / 2+radius+2, canvas.height / 2+10);
         ctx.fillText(distance, canvas.width / 2-radius+2, canvas.height / 2+10);
     }
+}
 
-    function green_line(angle){
-        detectionFactor = 4
+    function green_line(angle, distance){
+        detectionFactor = (distance / 150) * (canvas.height / 2.1);
+        console.log(detectionFactor);
         ctx.strokeStyle = "green";
         ctx.lineWidth = 2;
         let radians = angle * Math.PI / 180;
@@ -90,10 +112,10 @@
         let startY = canvas.height / 2;
         let endX = canvas.width / 2 + Math.cos(radians) * canvas.height / 2.1;
         let endY = canvas.height / 2 + Math.sin(radians) * canvas.height/ 2.1;
-        let intermediateX = canvas.width / 2 + Math.cos(radians) * canvas.height / detectionFactor;
-        let intermediateY = canvas.height / 2 + Math.sin(radians) * canvas.height/ detectionFactor;
-        let intermediatePreviousEndX = canvas.width / 2 + Math.cos(previousRadians) * canvas.height / detectionFactor;
-        let intermediatePreviousEndY = canvas.height / 2 + Math.sin(previousRadians) * canvas.height/ detectionFactor;
+        let intermediateX = canvas.width / 2 + Math.cos(radians) *  detectionFactor;
+        let intermediateY = canvas.height / 2 + Math.sin(radians) *  detectionFactor;
+        let intermediatePreviousEndX = canvas.width / 2 + Math.cos(previousRadians) *  detectionFactor;
+        let intermediatePreviousEndY = canvas.height / 2 + Math.sin(previousRadians) *  detectionFactor;
         let previousEndX = canvas.width / 2 + Math.cos(previousRadians) * canvas.height / 2.1;
         let previousEndY = canvas.height / 2 + Math.sin(previousRadians) * canvas.height/ 2.1;
         if (true){
@@ -133,8 +155,32 @@
             ctx.fill();
         }
     }
-    for (let angle = 0; angle < 30; angle += 1) 
-    green_line(angle)
+    /*
+    for (let angle = 0; angle < 30; angle += 1){
+        draw_init()
+        green_line(angle, 140)
+    } */
+    // SocketIO connection
+    
+    const socket = io();
+
+    socket.emit('request_data');
+
+    socket.on('data_update', function(data) {
+        console.log(data);
+        let angle = data.split(", ")[0];
+        let distance = data.split(", ")[1];
+        if (distance > 150){
+            distance = 150;
+        }
+        console.log(angle, distance);
+        fixedArray.append([angle, distance]);
+        draw_init();
+        for (let i = 0; i < fixedArray.array.length; i++){
+            green_line(fixedArray.array[i][0], fixedArray.array[i][1]);
+        }
+        // Here you can update your canvas with the received data
+    });
 
 
 </script>
